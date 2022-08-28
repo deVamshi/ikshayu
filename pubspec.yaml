@@ -39,6 +39,7 @@ dependencies:
   google_sign_in: ^5.4.1
   flutter_phone_direct_caller: ^2.1.1
   flutter_sms: ^2.3.3
+  avatar_glow: ^2.0.2
 
 dev_dependencies:
   flutter_test:
