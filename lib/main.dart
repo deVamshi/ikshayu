@@ -8,6 +8,7 @@ import 'package:ikshayu/home.screen.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'firebase_options.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:flutter_sms/flutter_sms.dart';
 
 int timeDecided = 5;
 
@@ -65,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (isInDanger) {
       await Future.delayed(const Duration(seconds: 1));
       callEmergencyContact();
+      sendEmergencySms();
     }
 
     remainingTime = timeDecided;
@@ -78,6 +80,23 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       debugPrint("$e");
     }
+  }
+
+  void sendEmergencySms() {
+    String message = "This is a test message!";
+    List<String> recipents = ["6305926936", "6303663432"];
+    _sendSMS(message, recipents);
+  }
+
+  void _sendSMS(String message, List<String> recipents) async {
+    String _result = await sendSMS(
+      message: message,
+      recipients: recipents,
+      sendDirect: true,
+    ).catchError((onError) {
+      debugPrint(onError);
+    });
+    debugPrint(_result);
   }
 
   @override
@@ -122,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ? "Calling Emergency..."
                           : "Press abort within ${remainingTime < 0 ? 0 : remainingTime} seconds to abort"),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () {  
                           isInDanger = false;
                           remainingTime = timeDecided;
                         },
@@ -142,3 +161,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+

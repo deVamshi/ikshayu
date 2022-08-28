@@ -38,6 +38,7 @@ dependencies:
   firebase_auth: ^3.7.0
   google_sign_in: ^5.4.1
   flutter_phone_direct_caller: ^2.1.1
+  flutter_sms: ^2.3.3
 
 dev_dependencies:
   flutter_test:
