@@ -2,7 +2,14 @@
     package="com.example.ikshayu">
 
     <uses-permission android:name="android.permission.SEND_SMS"/>
-    
+
+<queries>
+    <intent>
+        <action android:name="android.intent.action.SENDTO" />
+        <data android:scheme="smsto"/>
+    </intent>
+</queries>
+
    <application
         android:label="ikshayu"
         android:name="${applicationName}"

@@ -13,12 +13,15 @@ import 'package:flutter_sms/flutter_sms.dart';
 int timeDecided = 5;
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -45,6 +48,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  
   bool isInDanger = false;
 
   bool isLoggedIn = false;
@@ -52,6 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int remainingTime = timeDecided;
 
   void showPromptToAbort() async {
+
     setState(() {
       isInDanger = true;
     });
@@ -65,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (isInDanger) {
       await Future.delayed(const Duration(seconds: 1));
-      callEmergencyContact();
+      // callEmergencyContact();
       sendEmergencySms();
     }
 
@@ -94,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
       recipients: recipents,
       sendDirect: true,
     ).catchError((onError) {
-      debugPrint(onError);
+      debugPrint("$onError");
     });
     debugPrint(_result);
   }
@@ -141,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ? "Calling Emergency..."
                           : "Press abort within ${remainingTime < 0 ? 0 : remainingTime} seconds to abort"),
                       ElevatedButton(
-                        onPressed: () {  
+                        onPressed: () {
                           isInDanger = false;
                           remainingTime = timeDecided;
                         },
@@ -154,22 +159,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {},
+        onPressed: () async {
+          sendEmergencySms();
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
