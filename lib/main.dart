@@ -1,11 +1,23 @@
 import 'dart:math';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:ikshayu/emergency.screen.dart';
+import 'package:ikshayu/helpers.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:ikshayu/home.dart';
+import 'package:ikshayu/home.screen.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'firebase_options.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:flutter_sms/flutter_sms.dart';
+import 'package:avatar_glow/avatar_glow.dart';
+
+int timeDecided = 5;
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -16,21 +28,12 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -40,7 +43,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
-
   final String title;
 
   @override
@@ -48,79 +50,159 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  bool isInDanger = false;
+  bool inEmergencyScreen = false;
 
-  String result = "Not yet";
+  bool isLoggedIn = false;
+
+  int remainingTime = timeDecided;
+
+  void showPromptToAbort() async {
+    setState(() {
+      isInDanger = true;
+    });
+
+    for (int i = remainingTime; i >= 0; i--) {
+      await Future.delayed(const Duration(seconds: 1));
+      setState(() {
+        remainingTime--;
+      });
+    }
+
+    if (isInDanger) {
+      await Future.delayed(const Duration(seconds: 1));
+      sendEmergencySms();
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      await callEmergencyContact();
+      await Future.delayed(const Duration(seconds: 2));
+      setState(() {
+        inEmergencyScreen = true;
+      });
+    }
+
+    remainingTime = timeDecided;
+  }
+
+  Future<void> callEmergencyContact() async {
+    try {
+      bool? res = await FlutterPhoneDirectCaller.callNumber("6303663432");
+      debugPrint("Value of calling function");
+      debugPrint("$res");
+    } catch (e) {
+      debugPrint("$e");
+    }
+  }
+
+  void sendEmergencySms() {
+    String message = "Your loved one might be in danger, Please check on them!";
+    List<String> recipents = ["6303663432"];
+    _sendSMS(message, recipents);
+  }
+
+  void _sendSMS(String message, List<String> recipents) async {
+    String _result = await sendSMS(
+      message: message,
+      recipients: recipents,
+      sendDirect: true,
+    ).catchError((onError) {
+      debugPrint("$onError");
+    });
+    debugPrint(_result);
+  }
 
   @override
   void initState() {
+    // FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    //   if (user == null) {
+    //     print('User is currently signed out!');
+    //     isLoggedIn = false;
+    //     setState(() {});
+    //   } else {
+    //     print('User is signed in!');
+    //     isLoggedIn = true;
+    //     setState(() {});
+    //   }
+    // });
+
     accelerometerEvents.listen((AccelerometerEvent event) {
       double a =
           sqrt(event.x * event.x + event.y * event.y + event.z + event.z);
       if (a < 1 || a == double.nan) {
-        setState(() {
-          result = "FELLLL";
-        });
+        if (!isInDanger) showPromptToAbort();
       }
     });
+
     super.initState();
   }
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  void _signIn() => signInWithGoogle();
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    if (inEmergencyScreen) return const EmergencyScreen();
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$result',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            isInDanger
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Are you in Emergency?",
+                        style: TextStyle(
+                            fontSize: 27, fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        remainingTime == 0
+                            ? "Calling Emergency..."
+                            : "Press abort within the next 5 seconds if it is a false fall",
+                        style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w200),
+                      ),
+                      AvatarGlow(
+                          glowColor: Colors.blue,
+                          endRadius: 200,
+                          duration: const Duration(milliseconds: 2000),
+                          repeat: true,
+                          showTwoGlows: true,
+                          repeatPauseDuration:
+                              const Duration(milliseconds: 100),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              isInDanger = false;
+                              remainingTime = timeDecided;
+                              setState(() {});
+                            },
+                            child: Text(
+                              "Abort",
+                              style: TextStyle(fontSize: 27),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              elevation: 10,
+                              padding: EdgeInsets.all(100),
+                              shape: CircleBorder(),
+                            ),
+                          )),
+                    ],
+                  )
+                : Home(),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     sendEmergencySms();
+      //   },
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
