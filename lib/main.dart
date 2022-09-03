@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ikshayu/emergency.screen.dart';
 import 'package:ikshayu/helpers.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:ikshayu/home.dart';
@@ -12,7 +13,7 @@ import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 
-int timeDecided = 10;
+int timeDecided = 5;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +51,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool isInDanger = false;
+  bool inEmergencyScreen = false;
 
   bool isLoggedIn = false;
 
@@ -71,17 +73,21 @@ class _MyHomePageState extends State<MyHomePage> {
       await Future.delayed(const Duration(seconds: 1));
       sendEmergencySms();
 
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
 
-      callEmergencyContact();
+      await callEmergencyContact();
+      await Future.delayed(const Duration(seconds: 2));
+      setState(() {
+        inEmergencyScreen = true;
+      });
     }
 
     remainingTime = timeDecided;
   }
 
-  void callEmergencyContact() async {
+  Future<void> callEmergencyContact() async {
     try {
-      bool? res = await FlutterPhoneDirectCaller.callNumber("9493005606");
+      bool? res = await FlutterPhoneDirectCaller.callNumber("6303663432");
       debugPrint("Value of calling function");
       debugPrint("$res");
     } catch (e) {
@@ -90,8 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void sendEmergencySms() {
-    String message = "This is a test message for Ikshaya!";
-    List<String> recipents = ["9493005606"];
+    String message = "Your loved one might be in danger, Please check on them!";
+    List<String> recipents = ["6303663432"];
     _sendSMS(message, recipents);
   }
 
@@ -123,7 +129,9 @@ class _MyHomePageState extends State<MyHomePage> {
     accelerometerEvents.listen((AccelerometerEvent event) {
       double a =
           sqrt(event.x * event.x + event.y * event.y + event.z + event.z);
-      if (a < 1 || a == double.nan) showPromptToAbort();
+      if (a < 1 || a == double.nan) {
+        if (!isInDanger) showPromptToAbort();
+      }
     });
 
     super.initState();
@@ -133,10 +141,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (inEmergencyScreen) return const EmergencyScreen();
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(widget.title),
-      // ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -146,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         "Are you in Emergency?",
                         style: TextStyle(
                             fontSize: 27, fontWeight: FontWeight.w700),
@@ -154,8 +160,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       Text(
                         remainingTime == 0
                             ? "Calling Emergency..."
-                            : "Press abort within ${remainingTime < 0 ? 0 : remainingTime} seconds to abort",
-                        style: TextStyle(
+                            : "Press abort within the next 5 seconds if it is a false fall",
+                        style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 15,
                             fontWeight: FontWeight.w200),
@@ -163,23 +169,26 @@ class _MyHomePageState extends State<MyHomePage> {
                       AvatarGlow(
                           glowColor: Colors.blue,
                           endRadius: 200,
-                          duration: Duration(milliseconds: 2000),
+                          duration: const Duration(milliseconds: 2000),
                           repeat: true,
                           showTwoGlows: true,
-                          repeatPauseDuration: Duration(milliseconds: 100),
+                          repeatPauseDuration:
+                              const Duration(milliseconds: 100),
                           child: ElevatedButton(
                             onPressed: () {
                               isInDanger = false;
                               remainingTime = timeDecided;
+                              setState(() {});
                             },
                             child: Text(
                               "Abort",
                               style: TextStyle(fontSize: 27),
                             ),
                             style: ElevatedButton.styleFrom(
-                                elevation: 10,
-                                padding: EdgeInsets.all(100),
-                                shape: CircleBorder()),
+                              elevation: 10,
+                              padding: EdgeInsets.all(100),
+                              shape: CircleBorder(),
+                            ),
                           )),
                     ],
                   )
@@ -187,13 +196,13 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          sendEmergencySms();
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     sendEmergencySms();
+      //   },
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

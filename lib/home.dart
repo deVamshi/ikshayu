@@ -6,17 +6,17 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            "Your Fine",
-            style: TextStyle(
-              fontSize: 30,
-            ),
-          )
-        ],
-    )
-    ;
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: const [
+        Text(
+          "Walking...",
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
 }
